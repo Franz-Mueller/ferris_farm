@@ -1,3 +1,4 @@
+// Source: https://microcontrollerslab.com/esp32-sht31-temperature-humidity-sensor-tutorial/
 #include <Arduino.h>
 #include <Wire.h>
 #include "Adafruit_SHT31.h"
@@ -34,3 +35,8 @@ void loop() {
 
   delay(1000);
 }
+
+// VIN -> 3.3V
+// GND -> GND
+// SCL -> GPIO 22
+// SDA -> GPIO 21

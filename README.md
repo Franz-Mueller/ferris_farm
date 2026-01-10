@@ -4,4 +4,4 @@ FerrisFarm is a personal project to equip an indoor greenhouse with sensors and 
 
 This project is a learning exercise and not intended for production use or to replace commercial greenhouse systems. It's primarily a way for me to practice **Rust** and have a bit of fun. Feel free to explore the code or try the setup if you like.
 
-The project is under active development and not yet ready for production.
+The project is under active development and not yet ready.

@@ -1,4 +1,4 @@
-# FerrisFarm
+# 🦀 FerrisFarm
 
 FerrisFarm is a personal project to equip an indoor greenhouse with sensors and actuators to monitor and control the environment. The sensors are ESP32-based and measure air temperature, air humidity, light intensity, soil moisture, and soil temperature. The control hub is a Raspberry Pi running an Axum web server and using two databases: one optimized for fast reads/writes of monitoring data, and another for user accounts, settings, and related data. The Pi provides a web-based frontend for visualizing data and controlling actuators such as an LED grow light and an inline fan.
 

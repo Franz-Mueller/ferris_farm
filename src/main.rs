@@ -1,17 +1,15 @@
-use ferris_farm::http::threads::ThreadPool;
+use ferris_farm::http::{sensor_read::read_sensor_message, threads::ThreadPool};
 use std::{
     fs,
     io::{BufReader, prelude::*},
     net::{TcpListener, TcpStream},
-    thread,
-    time::Duration,
 };
 
 fn main() {
     let listener = TcpListener::bind("0.0.0.0:7878").unwrap();
     let pool = ThreadPool::new(4);
 
-    for stream in listener.incoming().take(100) {
+    for stream in listener.incoming() {
         let stream = stream.unwrap();
 
         pool.execute(|| {
@@ -23,19 +21,46 @@ fn main() {
 }
 
 fn handle_connection(mut stream: TcpStream) {
-    let buf_reader = BufReader::new(&stream);
-    let request_line = buf_reader.lines().next().unwrap().unwrap();
+    let mut reader: BufReader<&mut TcpStream> = BufReader::new(&mut stream);
+
+    let mut request_line = String::new();
+    if reader.read_line(&mut request_line).is_err() {
+        return;
+    }
+    let request_line = request_line.trim_end_matches(&['\r', '\n'][..]).to_string();
+
+    let mut content_length: usize = 0;
+    loop {
+        let mut line = String::new();
+        if reader.read_line(&mut line).is_err() {
+            return;
+        }
+
+        let trimmed = line.trim_end_matches(&['\r', '\n'][..]);
+        if trimmed.is_empty() {
+            break;
+        }
+        if let Some(value) = trimmed.strip_prefix("Content-Length:") {
+            content_length = value.trim().parse().unwrap_or(0);
+        }
+    }
+
+    let mut body = String::new();
+    if content_length > 0 {
+        let mut buf = vec![0u8; content_length];
+        if reader.read_exact(&mut buf).is_err() {
+            return;
+        }
+        body = String::from_utf8_lossy(&buf).to_string();
+    }
 
     let (status_line, filename) = match &request_line[..] {
         "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "html/hello.html"),
-        "GET /sleep HTTP/1.1" => {
-            thread::sleep(Duration::from_secs(5));
+        "POST /api/sensor/hum_temp HTTP/1.1" => {
+            read_sensor_message(body);
             ("HTTP/1.1 200 OK", "html/hello.html")
         }
-        _ => {
-            println!("ESP32 Success!");
-            ("HTTP/1.1 404 NOT FOUND", "html/404.html")
-        }
+        _ => ("HTTP/1.1 404 NOT FOUND", "html/404.html"),
     };
 
     let contents = fs::read_to_string(filename).unwrap();

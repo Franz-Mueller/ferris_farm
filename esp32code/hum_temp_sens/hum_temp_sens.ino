@@ -10,7 +10,7 @@ Adafruit_SHT31 sht31 = Adafruit_SHT31();
 const char WIFI_SSID[] = "+++++++++++++++";
 const char WIFI_PASSWORD[] = "+++++++++++++++";
 String HOST_NAME   = "http://192.168.178.44:7878/";
-String PATH_NAME   = "/api/sensor/hum_temp"; 
+String PATH_NAME   = "api/sensor/hum_temp"; 
 
 void setup() {
   Serial.begin(9600);
@@ -42,15 +42,17 @@ void loop() {
 
   String queryString;
 
-  if ((! isnan(temp)) && (! isnan(hum))) { 
-    String queryString = String("temp:") + temp + ", hum:" + hum;
+  if ((!isnan(temp)) && (!isnan(hum))) {
+    queryString = String("temp:") + temp + ", hum:" + hum;
     Serial.println("OK");
-  } else { 
-    String queryString = String("could not read temp or hum data");
+  } else {
+    queryString = "could not read temp or hum data";
     Serial.println("ERROR");
   }
+  http.setTimeout(5000);
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-  int httpCode = http.POST(queryString);
+  int httpCode = http.POST((uint8_t*)queryString.c_str(), queryString.length());
   if (httpCode > 0) {
     // file found at server
     if (httpCode == HTTP_CODE_OK) {

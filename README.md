@@ -16,3 +16,4 @@ I will...
 2. Begin with the multithreaded server implementation from the final chapter of "The Rust Programming Language" book.
 3. Embrace rewrites, even if they are challenging or time-consuming.
 4. Prioritize learning Rust above all else. Development of ESP32 code and the frontend will be deprioritized. 
+5. No AI. I want to learn how to do it not how to let someone (something) else do it.

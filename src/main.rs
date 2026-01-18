@@ -1,7 +1,7 @@
-use ferris_farm::http::{
-    requests::HttpRequest, sensor_read::read_sensor_message, threads::ThreadPool,
-};
+use ferris_farm::server::{requests::HttpRequest, threads::ThreadPool};
 use std::net::{TcpListener, TcpStream};
+
+const PAGES: [&str; 2] = ["/api/sensor/hum_temp", "lol"];
 
 fn main() {
     let listener = TcpListener::bind("0.0.0.0:7878").unwrap();
@@ -21,10 +21,17 @@ fn main() {
 fn handle_connection(mut stream: TcpStream) {
     match HttpRequest::read_from_stream(&mut stream) {
         Ok(req) => {
-            println!("{:#?}", req.get_body_as_string());
+            pass_request(req);
         }
-        Err(e) => {
-            eprintln!("bad request: {e}");
+        Err(e) => {}
+    }
+}
+
+fn pass_request(req: HttpRequest) {
+    for page in PAGES {
+        if req.target == page {
+            println!("{:#?}", req.get_body_as_string());
+            break;
         }
     }
 }

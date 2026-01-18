@@ -1,51 +1,105 @@
 use std::{
-    fmt::Error,
+    collections::HashMap,
+    io,
     io::{BufReader, prelude::*},
     net::TcpStream,
 };
 
-enum HttpMethod {
-    Get,
-    Head,
-    Post,
-    Put,
-    Delete,
-    Connect,
-    Options,
-    Trace,
-    Patch,
-}
-
+#[derive(Debug)]
 pub struct HttpRequest {
-    method: HttpMethod,
-    target: String,
-    version: String,
-    body: String,
+    pub method: String,
+    pub target: String,
+    pub version: String,
+    pub headers: HashMap<String, String>,
+    pub body: Vec<u8>,
 }
 
 impl HttpRequest {
-    pub fn new(buf_reader: BufReader<&TcpStream>) -> Result<HttpRequest, &'static str> {
-        let request_line = buf_reader.lines().next().unwrap().unwrap();
-        let request_line: Vec<&str> = request_line.split(" ").collect();
+    pub fn read_from_stream(stream: &mut TcpStream) -> io::Result<Self> {
+        let mut reader = BufReader::new(stream);
 
-        let method: HttpMethod = match request_line[0] {
-            "GET" => HttpMethod::Get,
-            "HEAD" => HttpMethod::Head,
-            "POST" => HttpMethod::Post,
-            "PUT" => HttpMethod::Put,
-            "DELETE" => HttpMethod::Delete,
-            "CONNECT" => HttpMethod::Connect,
-            "OPTIONS" => HttpMethod::Options,
-            "TRACE" => HttpMethod::Trace,
-            "PATCH" => HttpMethod::Patch,
-            _ => return Err("invalid method"),
-        };
+        let mut request_line = String::new();
+        reader.read_line(&mut request_line)?;
+        if request_line.is_empty() {
+            return Err(io::Error::new(
+                io::ErrorKind::UnexpectedEof,
+                "empty request line",
+            ));
+        }
+        let request_line = request_line.trim_end_matches(&['\r', '\n'][..]);
+
+        let mut parts = request_line.split_whitespace();
+        let method = parts
+            .next()
+            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing method"))?
+            .to_string();
+        let target = parts
+            .next()
+            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing target"))?
+            .to_string();
+        let version = parts
+            .next()
+            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing version"))?
+            .to_string();
+
+        if parts.next().is_some() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "malformed request line",
+            ));
+        }
+
+        let mut headers = HashMap::new();
+        loop {
+            let mut line = String::new();
+            reader.read_line(&mut line)?;
+            if line.is_empty() {
+                return Err(io::Error::new(
+                    io::ErrorKind::UnexpectedEof,
+                    "eof in headers",
+                ));
+            }
+
+            if line == "\r\n" {
+                break;
+            }
+
+            let line = line.trim_end_matches(&['\r', '\n'][..]);
+
+            let (name, value) = line
+                .split_once(':')
+                .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "bad header line"))?;
+
+            headers.insert(name.trim().to_ascii_lowercase(), value.trim().to_string());
+        }
+
+        let mut body = Vec::new();
+
+        if let Some(cl) = headers.get("content-length") {
+            let len: usize = cl
+                .parse()
+                .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "bad content-length"))?;
+
+            body.resize(len, 0);
+            reader.read_exact(&mut body)?;
+        } else if let Some(te) = headers.get("transfer-encoding") {
+            if te.to_ascii_lowercase().contains("chunked") {
+                return Err(io::Error::new(
+                    io::ErrorKind::Unsupported,
+                    "chunked transfer-encoding not supported",
+                ));
+            }
+        }
 
         Ok(HttpRequest {
-            method: method,
-            target: request_line[1].to_string(),
-            version: request_line[2].to_string(),
-            body: "lol".to_string(),
+            method,
+            target,
+            version,
+            headers,
+            body,
         })
+    }
+    pub fn get_body_as_string(&self) -> String {
+        String::from_utf8_lossy(&self.body).to_string()
     }
 }

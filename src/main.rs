@@ -1,4 +1,6 @@
-use ferris_farm::http::{sensor_read::read_sensor_message, threads::ThreadPool};
+use ferris_farm::http::{
+    requests::HttpRequest, sensor_read::read_sensor_message, threads::ThreadPool,
+};
 use std::{
     fs,
     io::{BufReader, prelude::*},
@@ -21,10 +23,11 @@ fn main() {
 }
 
 fn handle_connection(mut stream: TcpStream) {
-    let mut reader: BufReader<&mut TcpStream> = BufReader::new(&mut stream);
+    let buf_reader = BufReader::new(&stream);
+    let http_request = HttpRequest::new(buf_reader);
 
     let mut request_line = String::new();
-    if reader.read_line(&mut request_line).is_err() {
+    if buf_reader.read_line(&mut request_line).is_err() {
         return;
     }
     let request_line = request_line.trim_end_matches(&['\r', '\n'][..]).to_string();
@@ -32,7 +35,7 @@ fn handle_connection(mut stream: TcpStream) {
     let mut content_length: usize = 0;
     loop {
         let mut line = String::new();
-        if reader.read_line(&mut line).is_err() {
+        if buf_reader.read_line(&mut line).is_err() {
             return;
         }
 

@@ -1,7 +1,11 @@
-use ferris_farm::server::{requests::HttpRequest, threads::ThreadPool};
-use std::net::{TcpListener, TcpStream};
-
-const PAGES: [&str; 2] = ["/api/sensor/hum_temp", "lol"];
+use ferris_farm::{
+    sensors::sensor,
+    server::{requests::HttpRequest, threads::ThreadPool},
+};
+use std::{
+    fmt::Error,
+    net::{TcpListener, TcpStream},
+};
 
 fn main() {
     let listener = TcpListener::bind("0.0.0.0:7878").unwrap();
@@ -27,11 +31,17 @@ fn handle_connection(mut stream: TcpStream) {
     }
 }
 
-fn pass_request(req: HttpRequest) {
-    for page in PAGES {
-        if req.target == page {
-            println!("{:#?}", req.get_body_as_string());
-            break;
-        }
-    }
+fn pass_request(req: HttpRequest) -> Result<(), &'static str> {
+    println!("{}", req.target.as_str());
+    let sensor: sensor::AnySensor = match req.target.as_str() {
+        "/api/sensor/temp" => sensor::AnySensor::Temp(sensor::TempSensor {}),
+        "/api/sensor/hum" => sensor::AnySensor::Hum(sensor::HumSensor {}),
+        "/api/sensor/lux" => sensor::AnySensor::Lux(sensor::LuxSensor {}),
+        _ => return Err("unknown sensor endpoint"),
+    };
+
+    let body = req.get_body_as_string();
+    sensor.process(&body);
+
+    Ok(())
 }

@@ -7,10 +7,11 @@
 
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
-const char WIFI_SSID[] = "+++++++++++++++";
-const char WIFI_PASSWORD[] = "+++++++++++++++";
+const char WIFI_SSID[] = "IamRoutingForMe2,4";
+const char WIFI_PASSWORD[] = "Hundeaugen2003";
 String HOST_NAME   = "http://192.168.178.44:7878/";
-String PATH_NAME   = "api/sensor/hum_temp"; 
+String PATH_NAME_TEMP   = "api/sensor/temp"; 
+String PATH_NAME_HUM   = "api/sensor/hum"; 
 
 void setup() {
   Serial.begin(9600);
@@ -32,40 +33,60 @@ void setup() {
 }
 
 void loop() {
-  HTTPClient http;
+  HTTPClient http_temp;
+  HTTPClient http_hum;
 
-  http.begin(HOST_NAME + PATH_NAME);
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  http_temp.begin(HOST_NAME + PATH_NAME_TEMP);
+  http_temp.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+  http_hum.begin(HOST_NAME + PATH_NAME_HUM);
+  http_hum.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
   float temp = sht31.readTemperature();
   float hum = sht31.readHumidity();
 
-  String queryString;
+  String queryStringTemp;
+  String queryStringHum;
 
-  if ((!isnan(temp)) && (!isnan(hum))) {
-    queryString = String("temp:") + temp + ", hum:" + hum;
-    Serial.println("OK");
+  if (!isnan(temp)){
+    queryStringTemp = String(temp);
+    Serial.println("Temp OK");
   } else {
-    queryString = "could not read temp or hum data";
-    Serial.println("ERROR");
+    queryStringTemp = "NA";
+    Serial.println("Temp ERROR");
   }
-  http.setTimeout(5000);
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-  int httpCode = http.POST((uint8_t*)queryString.c_str(), queryString.length());
-  if (httpCode > 0) {
-    // file found at server
-    if (httpCode == HTTP_CODE_OK) {
-      String payload = http.getString();
-      Serial.println(payload);
-    } else {
-      // HTTP header has been send and Server response header has been handled
-      Serial.printf("[HTTP] POST... code: %d\n", httpCode);
-    }
+  if (!isnan(hum)){
+    queryStringHum = String(hum);
+    Serial.println("Hum OK");
   } else {
-    Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
+    queryStringHum = "NA";
+    Serial.println("Hum ERROR");
   }
-  http.end();
+
+  http_temp.setTimeout(5000);
+  http_temp.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  http_temp.POST((uint8_t*)queryStringTemp.c_str(), queryStringTemp.length());
+
+  http_hum.setTimeout(5000);
+  http_hum.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  http_hum.POST((uint8_t*)queryStringHum.c_str(), queryStringHum.length());
+
+  // int httpCode = 
+  // if (httpCode > 0) {
+  //   // file found at server
+  //   if (httpCode == HTTP_CODE_OK) {
+  //     String payload = http.getString();
+  //     Serial.println(payload);
+  //   } else {
+  //     // HTTP header has been send and Server response header has been handled
+  //     Serial.printf("[HTTP] POST... code: %d\n", httpCode);
+  //   }
+  // } else {
+  //   Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
+  // }
+  http_temp.end();
+  http_hum.end();
   delay(1000);
 }
 

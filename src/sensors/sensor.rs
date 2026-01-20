@@ -52,7 +52,7 @@ impl Sensor for TempSensor {
     type Value = f32;
 
     fn process_measurement(&self, value: &str) -> Result<Self::Value, SensorError> {
-        value.parse::<f32>().map_err(|e| SensorError::ParseFloat(e))
+        value.parse::<f32>().map_err(SensorError::ParseFloat)
     }
     fn write_to_db(&self, value: &f32) -> Result<(), SensorError> {
         println!("DB write temp: {value}");
@@ -64,7 +64,7 @@ impl Sensor for HumSensor {
     type Value = f32;
 
     fn process_measurement(&self, value: &str) -> Result<Self::Value, SensorError> {
-        value.parse::<f32>().map_err(|e| SensorError::ParseFloat(e))
+        value.parse::<f32>().map_err(SensorError::ParseFloat)
     }
     fn write_to_db(&self, value: &f32) -> Result<(), SensorError> {
         println!("DB write hum: {value}");
@@ -77,10 +77,7 @@ impl Sensor for LuxSensor {
 
     /// takes lux as &str and returns tuple (f32, f32) conatining lux and ppfd
     fn process_measurement(&self, value: &str) -> Result<Self::Value, SensorError> {
-        let lux: f32 = match value.parse::<f32>() {
-            Ok(f) => f,
-            Err(e) => return Err(SensorError::ParseFloat(e)),
-        };
+        let lux: f32 = value.parse::<f32>().map_err(SensorError::ParseFloat)?;
         // TODO should later be changed to user choosable value
         // 0,0185 is estimated value for LED Full-Spectrum
         Ok((lux, lux * 0.0185))

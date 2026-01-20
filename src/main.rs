@@ -3,9 +3,11 @@ use ferris_farm::{
     server::{requests::HttpRequest, threads::ThreadPool},
 };
 use std::{
-    fmt::Error,
+    io,
     net::{TcpListener, TcpStream},
 };
+
+// TODO Error handling for request.rs and threads.rs
 
 fn main() {
     let listener = TcpListener::bind("0.0.0.0:7878").unwrap();
@@ -15,33 +17,38 @@ fn main() {
         let stream = stream.unwrap();
 
         pool.execute(|| {
-            handle_connection(stream);
+            if let Err(e) = handle_connection(stream) {
+                println!("Error: {}", e);
+            };
         });
     }
 
     println!("Shutting down.");
 }
 
-fn handle_connection(mut stream: TcpStream) {
-    match HttpRequest::read_from_stream(&mut stream) {
-        Ok(req) => {
-            pass_request(req);
-        }
-        Err(e) => {}
-    }
+fn handle_connection(mut stream: TcpStream) -> Result<(), io::Error> {
+    let req = HttpRequest::read_from_stream(&mut stream)?;
+    pass_request(req)?;
+    Ok(())
 }
 
-fn pass_request(req: HttpRequest) -> Result<(), &'static str> {
-    println!("{}", req.target.as_str());
+fn pass_request(req: HttpRequest) -> Result<(), io::Error> {
     let sensor: sensor::AnySensor = match req.target.as_str() {
         "/api/sensor/temp" => sensor::AnySensor::Temp(sensor::TempSensor {}),
         "/api/sensor/hum" => sensor::AnySensor::Hum(sensor::HumSensor {}),
         "/api/sensor/lux" => sensor::AnySensor::Lux(sensor::LuxSensor {}),
-        _ => return Err("unknown sensor endpoint"),
+        _ => {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                format!("unknown sensor endpoint {}", req.target),
+            ));
+        }
     };
 
     let body = req.get_body_as_string();
-    sensor.process(&body);
+    sensor
+        .process(&body)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
 
     Ok(())
 }

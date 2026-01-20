@@ -67,18 +67,7 @@ static void post_reading(const String& payload) {
   http.setTimeout(5000);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-  int code = http.POST((uint8_t*)payload.c_str(), payload.length());
-
-  if (code > 0) {
-    if (code == HTTP_CODE_OK) {
-      Serial.println(http.getString());
-    } else {
-      Serial.printf("[HTTP] POST code: %d\n", code);
-    }
-  } else {
-    Serial.printf("[HTTP] POST failed: %s\n", http.errorToString(code).c_str());
-  }
-
+  http.POST((uint8_t*)payload.c_str(), payload.length());
   http.end();
 }
 

@@ -71,20 +71,7 @@ void loop() {
   http_hum.setTimeout(5000);
   http_hum.addHeader("Content-Type", "application/x-www-form-urlencoded");
   http_hum.POST((uint8_t*)queryStringHum.c_str(), queryStringHum.length());
-
-  // int httpCode = 
-  // if (httpCode > 0) {
-  //   // file found at server
-  //   if (httpCode == HTTP_CODE_OK) {
-  //     String payload = http.getString();
-  //     Serial.println(payload);
-  //   } else {
-  //     // HTTP header has been send and Server response header has been handled
-  //     Serial.printf("[HTTP] POST... code: %d\n", httpCode);
-  //   }
-  // } else {
-  //   Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
-  // }
+  
   http_temp.end();
   http_hum.end();
   delay(1000);

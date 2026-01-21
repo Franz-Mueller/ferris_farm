@@ -7,14 +7,18 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
-// TODO Error handling for request.rs and threads.rs
-
 fn main() {
     let listener = TcpListener::bind("0.0.0.0:7878").expect("failed to bind to 0.0.0.0:7878");
     let pool = ThreadPool::new(4);
 
     for stream in listener.incoming() {
-        let stream = stream.unwrap(); // TODO match 
+        let stream = match stream {
+            Ok(s) => s,
+            Err(e) => {
+                println!("could not establish connection: {e}");
+                continue;
+            }
+        };
 
         pool.execute(|| {
             if let Err(e) = handle_connection(stream) {

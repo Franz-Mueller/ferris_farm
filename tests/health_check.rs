@@ -1,6 +1,5 @@
 use reqwest;
 use std::net::TcpListener;
-use tokio;
 
 #[tokio::test]
 async fn health_check_works() {
@@ -9,7 +8,7 @@ async fn health_check_works() {
     let client = reqwest::Client::new();
     // Act
     let response = client
-        .get("{}/health_check")
+        .get(&format!("{}/health_check", &address))
         .send()
         .await
         .expect("Failed to execute request.");

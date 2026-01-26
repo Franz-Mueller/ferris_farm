@@ -1,6 +1,5 @@
 use ferris_farm::run;
 use std::net::TcpListener;
-use tokio;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {

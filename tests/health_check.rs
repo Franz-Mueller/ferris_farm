@@ -1,4 +1,3 @@
-use reqwest;
 use std::net::TcpListener;
 
 #[tokio::test]
@@ -8,7 +7,7 @@ async fn health_check_works() {
     let client = reqwest::Client::new();
     // Act
     let response = client
-        .get(&format!("{}/health_check", &address))
+        .get(format!("{}/health_check", &address))
         .send()
         .await
         .expect("Failed to execute request.");
@@ -17,6 +16,7 @@ async fn health_check_works() {
     assert_eq!(Some(0), response.content_length());
 }
 
+#[allow(clippy::let_underscore_future)]
 fn spawn_app() -> String {
     let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port");
     let port = listener.local_addr().unwrap().port();

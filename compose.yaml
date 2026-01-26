@@ -1,0 +1,42 @@
+name: ferris_farm
+#services:
+#  influxdb3-core:
+#    container_name: influxdb3-core
+#    image: influxdb:3-core
+#    ports:
+#      - 8181:8181
+#      - 50051:50051
+#    command:
+#      - influxdb3
+#      - serve
+#      - --node-id=node0
+#      - --object-store=file
+#      - --data-dir=/var/lib/influxdb3/data
+#      - --plugin-dir=/var/lib/influxdb3/plugins
+#    volumes:
+#      - type: bind
+#        source: ~/.influxdb3/core/data
+#        target: /var/lib/influxdb3/data
+#      - type: bind
+#        source: ~/.influxdb3/core/plugins
+#        target: /var/lib/influxdb3/plugins
+
+services:
+  influxdb2:
+    image: influxdb:2
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_USER}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_PASSWORD}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN}
+      DOCKER_INFLUXDB_INIT_ORG: docs
+      DOCKER_INFLUXDB_INIT_BUCKET: home
+    volumes:
+      - influxdb2-data:/var/lib/influxdb2
+      - influxdb2-config:/etc/influxdb2
+
+volumes:
+  influxdb2-data:
+  influxdb2-config:

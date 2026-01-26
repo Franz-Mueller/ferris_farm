@@ -9,5 +9,8 @@ visualizing data and controlling actuators such as an LED grow light and an inli
 This project is a learning exercise and not intended for production use or to replace commercial greenhouse systems.
 It's primarily a way for me to practice **Rust** and have a bit of fun. Feel free to explore the code or try the setup
 if you like.
+This project is a learning exercise and not intended for production use or to replace commercial greenhouse systems.
+It's primarily a way for me to practice **Rust** and have a bit of fun. Feel free to explore the code or try the setup
+if you like.
 
 The project is currently under active development and is not yet ready for use.

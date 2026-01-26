@@ -1,4 +1,24 @@
 [package]
 name = "ferris_farm"
 version = "0.1.0"
+authors = ["Franz Müller <franz@franzhenrymueller.de>"]
 edition = "2024"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+path = "src/main.rs"
+name = "ferris_farm"
+
+[dependencies]
+actix-web = "4.12.1"
+tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread"] }
+
+[dev-dependencies]
+reqwest = "0.13.1"
+
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+[target.x86_64-ps-windows-gnu]
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
